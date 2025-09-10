@@ -1,0 +1,44 @@
+{
+  "name": "mini-crm-backend",
+  "version": "1.0.0",
+  "description": "Mini CRM Backend with Google OAuth",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "db:setup": "node database/setup.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "crm",
+    "node",
+    "express",
+    "oauth"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.5.0",
+    "bullmq": "^4.12.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "express-session": "^1.18.2",
+    "ioredis": "^5.3.2",
+    "joi": "^17.10.2",
+    "jsonwebtoken": "^9.0.2",
+    "moment": "^2.29.4",
+    "openai": "^4.11.1",
+    "passport": "^0.6.0",
+    "passport-google-oauth20": "^2.0.0",
+    "pg": "^8.11.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.33.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
