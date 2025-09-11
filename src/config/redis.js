@@ -28,17 +28,17 @@ try {
   }
 
   redis.on('connect', () => {
-    console.log('✅ Redis connected');
+    console.log('Redis connected');
   });
 
   redis.on('error', (err) => {
-    console.warn('⚠️ Redis connection error:', err.message);
-    console.log('📝 Note: Some features requiring Redis will be disabled');
+    console.warn('Redis connection error:', err.message);
+    console.log('Note: Some features requiring Redis will be disabled');
   });
 
 } catch (error) {
-  console.warn('⚠️ Redis initialization failed:', error.message);
-  console.log('📝 Note: Running without Redis - some features will be disabled');
+  console.warn('Redis initialization failed:', error.message);
+  console.log('Note: Running without Redis - some features will be disabled');
   
   // Create a mock Redis client for development
   redis = {

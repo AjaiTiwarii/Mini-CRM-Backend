@@ -5,17 +5,17 @@ const dataController = require('../controllers/dataController');
 // Use SESSION-based authentication (works with Google OAuth)
 const { authenticateSession } = require('../middleware/auth');
 
-// Customer routes (with session authentication) - FIX: Bind methods to preserve 'this' context
+// Customer routes (with session authentication) 
 router.get('/customers', authenticateSession, dataController.getCustomers.bind(dataController));
 router.post('/customers', authenticateSession, dataController.createCustomer.bind(dataController));
 
-// Order routes (with session authentication) - FIX: Bind methods to preserve 'this' context  
+// Order routes (with session authentication) 
 router.get('/orders', authenticateSession, dataController.getOrders.bind(dataController));
 router.post('/orders', authenticateSession, dataController.createOrder.bind(dataController));
 
-// Stats route (with session authentication) - FIX: Bind methods to preserve 'this' context
+// Stats route (with session authentication) 
 router.get('/stats', authenticateSession, dataController.getStats.bind(dataController));
 
-console.log('📊 Data routes registered WITH session-based authentication');
+console.log('Data routes registered WITH session-based authentication');
 
 module.exports = router;

@@ -1,6 +1,16 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const { User } = require('../models');
+
+// Import User model - fixed path and error handling
+let User;
+try {
+  const models = require('../models');
+  User = models.User;
+  console.log('User model imported in passport config');
+} catch (error) {
+  console.error('Failed to import User model in passport:', error.message);
+  throw error;
+}
 
 // Google OAuth Strategy
 passport.use(
@@ -27,14 +37,13 @@ passport.use(
           googleId: profile.id,
           email: profile.emails[0].value,
           name: profile.displayName,
-          avatar: profile.photos[0].value,
+          avatar: profile.photos[0]?.value || null,
         });
 
-        console.log(`✅ New user created: ${user.email}`);
+        console.log(`New user created: ${user.email}`);
         return done(null, user);
-
       } catch (error) {
-        console.error('❌ Google OAuth error:', error);
+        console.error('Google OAuth error:', error);
         return done(error, null);
       }
     }
