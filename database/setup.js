@@ -10,7 +10,7 @@ async function setupDatabase() {
 
   try {
     await client.connect();
-    console.log('✅ Connected to database');
+    console.log('Connected to database');
 
     // Run migrations
     const migrationSQL = fs.readFileSync(
@@ -18,7 +18,7 @@ async function setupDatabase() {
       'utf8'
     );
     await client.query(migrationSQL);
-    console.log('✅ Database migrations completed');
+    console.log('Database migrations completed');
 
     // Run seeds in development only
     if (process.env.NODE_ENV === 'development') {
@@ -27,11 +27,11 @@ async function setupDatabase() {
         'utf8'
       );
       await client.query(seedSQL);
-      console.log('✅ Sample data seeded');
+      console.log('Sample data seeded');
     }
 
   } catch (error) {
-    console.error('❌ Database setup failed:', error);
+    console.error('Database setup failed:', error);
     throw error;
   } finally {
     await client.end();
@@ -42,11 +42,11 @@ async function setupDatabase() {
 if (require.main === module) {
   setupDatabase()
     .then(() => {
-      console.log('🎉 Database setup complete!');
+      console.log('Database setup complete!');
       process.exit(0);
     })
     .catch((error) => {
-      console.error('💥 Setup failed:', error);
+      console.error('Setup failed:', error);
       process.exit(1);
     });
 }
