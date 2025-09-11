@@ -35,9 +35,9 @@ app.use(passport.session());
 // Import passport config after middleware setup
 try {
   require('./src/config/passport');
-  console.log('✅ Passport configuration loaded');
+  console.log('Passport configuration loaded');
 } catch (error) {
-  console.warn('⚠️ Passport configuration failed:', error.message);
+  console.warn('Passport configuration failed:', error.message);
 }
 
 // AUTH ROUTES (keeping your Google OAuth exactly as is)
@@ -64,22 +64,6 @@ app.get('/auth/google/callback',
   }
 );
 
-// Updated to match frontend expectations
-// app.get('/auth/me', (req, res) => {
-//   if (req.user) {
-//     res.json({ 
-//       success: true,
-//       data: { user: req.user },
-//       message: 'User authenticated'
-//     });
-//   } else {
-//     res.status(401).json({ 
-//       success: false,
-//       message: 'Not authenticated' 
-//     });
-//   }
-// });
-
 app.get('/auth/me', (req, res) => {
   if (req.user) {
     // Return user directly (not wrapped) - exactly as it was before
@@ -105,11 +89,11 @@ let dataRoutesLoaded = false;
 try {
   const dataRoutes = require('./src/routes/data');
   app.use('/api/data', dataRoutes);
-  console.log('✅ Data routes loaded');
+  console.log('Data routes loaded');
   dataRoutesLoaded = true;
 } catch (error) {
-  console.error('❌ Data routes failed to load:', error.message);
-  console.log('📝 Make sure src/routes/data.js and models exist');
+  console.error('Data routes failed to load:', error.message);
+  console.log('Make sure src/routes/data.js and models exist');
 }
 
 // MOCK ROUTES for features not implemented yet
@@ -234,41 +218,41 @@ async function startServer() {
 
     // Start server
     app.listen(PORT, () => {
-      console.log('🚀 Mini CRM Backend Starting...');
-      console.log(`📍 Server: http://localhost:${PORT}`);
-      console.log(`🔗 Health: http://localhost:${PORT}/health`);
-      console.log(`🧪 Test: http://localhost:${PORT}/test`);
-      console.log(`🔑 Google OAuth: http://localhost:${PORT}/auth/google`);
-      console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL}`);
+      console.log('Mini CRM Backend Starting...');
+      console.log(`Server: http://localhost:${PORT}`);
+      console.log(`Health: http://localhost:${PORT}/health`);
+      console.log(`Test: http://localhost:${PORT}/test`);
+      console.log(`Google OAuth: http://localhost:${PORT}/auth/google`);
+      console.log(` Frontend URL: ${process.env.FRONTEND_URL}`);
       
       console.log('');
-      console.log('✅ FEATURES STATUS:');
-      console.log('   🔐 Authentication: Google OAuth (real)');
-      console.log(`   📊 Data Ingestion: ${dataRoutesLoaded ? 'ACTIVE' : 'DISABLED (missing files)'}`);
-      console.log('   🎯 Segments: Mock (coming soon)');
-      console.log('   📢 Campaigns: Mock (coming soon)');
-      console.log('   🤖 AI Integration: Mock (coming soon)');
+      console.log('FEATURES STATUS:');
+      console.log('   Authentication: Google OAuth (real)');
+      console.log(`   Data Ingestion: ${dataRoutesLoaded ? 'ACTIVE' : 'DISABLED (missing files)'}`);
+      console.log('   Segments: Mock ');
+      console.log('   Campaigns: Mock ');
+      console.log('   AI Integration: Mock ');
       console.log('');
       
       if (dataRoutesLoaded) {
-        console.log('🎉 Server ready! Data APIs are live!');
-        console.log(`📊 Test stats: curl http://localhost:${PORT}/api/data/stats`);
+        console.log('Server ready! Data APIs are live!');
+        console.log(`Test stats: curl http://localhost:${PORT}/api/data/stats`);
       } else {
-        console.log('⚠️ Server ready but data routes disabled');
-        console.log('📝 Create missing files to enable data features');
+        console.log('Server ready but data routes disabled');
+        console.log('Create missing files to enable data features');
       }
     });
 
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
-    console.log('⚠️ Starting server anyway - data routes may not work');
+    console.error('Database connection failed:', error.message);
+    console.log('Starting server anyway - data routes may not work');
     
     // Start server even if database fails
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT} (DATABASE ISSUES)`);
-      console.log(`🔗 Health: http://localhost:${PORT}/health`);
-      console.log(`🧪 Test: http://localhost:${PORT}/test`);
-      console.log('📝 Fix database connection to enable data features');
+      console.log(`Server running on port ${PORT} (DATABASE ISSUES)`);
+      console.log(`Health: http://localhost:${PORT}/health`);
+      console.log(`Test: http://localhost:${PORT}/test`);
+      console.log('Fix database connection to enable data features');
     });
   }
 }
