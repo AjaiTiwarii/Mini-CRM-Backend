@@ -10,15 +10,13 @@ const User = sequelize.define('User', {
   googleId: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true
+    unique: true,
+    field: 'google_id'
   },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
-    validate: {
-      isEmail: true
-    }
+    unique: true
   },
   name: {
     type: DataTypes.STRING,
@@ -30,9 +28,8 @@ const User = sequelize.define('User', {
   }
 }, {
   tableName: 'users',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  underscored: true,
+  timestamps: true
 });
 
 module.exports = User;
