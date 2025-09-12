@@ -78,15 +78,21 @@ class SegmentController {
   buildWhereCondition(rules) {
     if (!rules.length) return {};
 
-    const conditions = [];
-    
-    for (const rule of rules) {
-      const condition = this.buildSingleCondition(rule);
-      conditions.push(condition);
+    let condition = this.buildSingleCondition(rules[0]);
+
+    for (let i = 1; i < rules.length; i++) {
+      const rule = rules[i];
+      const op = rule.logicalOperator === 'OR' ? Op.or : Op.and;
+      const nextCond = this.buildSingleCondition(rule);
+
+      condition = { [op]: [condition, nextCond] };
     }
 
-    return conditions.length === 1 ? conditions[0] : { [Op.and]: conditions };
+    return condition;
   }
+
+
+
 
   // Helper: Build single condition
   buildSingleCondition(rule) {
