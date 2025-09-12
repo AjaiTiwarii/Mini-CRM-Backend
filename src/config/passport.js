@@ -1,7 +1,7 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
-// Import User model - fixed path and error handling
+// Import User model 
 let User;
 try {
   const models = require('../models');
