@@ -52,7 +52,7 @@ class CampaignController {
         audienceSize: segment.audienceSize
       });
 
-      // Process campaign immediately (simple approach)
+      // Process campaign immediately
       await this.processCampaign(campaign.id, segment);
 
       const updatedCampaign = await Campaign.findByPk(campaign.id, {
@@ -108,7 +108,7 @@ class CampaignController {
       // Send messages to each customer
       for (const customer of customers) {
         try {
-          const message = `Hi ${customer.name}, here's 10% off on your next order! Use code SAVE10`;
+          const message = `Hi ${customer.name}, this is an example message`;
           
           // Create communication log
           await CommunicationLog.create({
@@ -118,7 +118,7 @@ class CampaignController {
             status: 'PENDING'
           });
 
-          // Simulate vendor API call (90% success rate)
+          // Simulate vendor API call (taking 90% success rate)
           const isSuccess = Math.random() < 0.9;
           
           if (isSuccess) {
@@ -165,19 +165,22 @@ class CampaignController {
 
   // Helper: Get customers matching segment rules
   async getCustomersForSegment(rules) {
-    const { Op } = require('sequelize');
-    
-    const conditions = [];
-    
-    for (const rule of rules) {
-      const condition = this.buildSingleCondition(rule);
-      conditions.push(condition);
-    }
+    if (!rules.length) return {};
 
-    const whereCondition = conditions.length === 1 ? conditions[0] : { [Op.and]: conditions };
+    const { Op } = require('sequelize');
+
+    let condition = this.buildSingleCondition(rules[0]);
+
+    for (let i = 1; i < rules.length; i++) {
+      const rule = rules[i];
+      const op = rule.logicalOperator === 'OR' ? Op.or : Op.and;
+      const nextCond = this.buildSingleCondition(rule);
+
+      condition = { [op]: [condition, nextCond] };
+    }
     
     return await Customer.findAll({
-      where: whereCondition,
+      where: condition,
       attributes: ['id', 'name', 'email']
     });
   }

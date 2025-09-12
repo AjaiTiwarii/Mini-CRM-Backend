@@ -91,9 +91,6 @@ class SegmentController {
     return condition;
   }
 
-
-
-
   // Helper: Build single condition
   buildSingleCondition(rule) {
     const { field, operator, value } = rule;

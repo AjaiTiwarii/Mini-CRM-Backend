@@ -152,7 +152,6 @@ class DataController {
         console.log(`Customer stats updated for ${targetCustomerId}`);
       } catch (statsError) {
         console.error(`Failed to update customer stats for ${targetCustomerId}:`, statsError);
-        // Don't fail the entire request if stats update fails
       }
 
       logger.info(`Order created by ${req.user.email}: ${order.id} for customer ${targetCustomerId}`);
@@ -183,19 +182,24 @@ class DataController {
   // GET /api/data/stats - Dashboard statistics
   async getStats(req, res) {
     try {
-      console.log(`GET /api/data/stats called by user: ${req.user.email}`);
-      
-      const [totalCustomers, totalOrders, revenueResult] = await Promise.all([
+      logger.info(`GET /api/data/stats called by user: ${req.user.email}`);
+
+      // Fetch counts in parallel
+      const [totalCustomers, completedOrders, pendingOrders, cancelledOrders, revenueResult] = await Promise.all([
         Customer.count(),
-        Order.count(),
-        Order.sum('amount')
+        Order.count({ where: { status: 'completed' } }),
+        Order.count({ where: { status: 'pending' } }),
+        Order.count({ where: { status: 'cancelled' } }),
+        Order.sum('amount', { where: { status: 'completed' } })
       ]);
 
       const totalRevenue = revenueResult || 0;
-      const completedOrders = await Order.count({ where: { status: 'completed' } });
-      
-      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-      const successRate = totalOrders > 0 ? (completedOrders / totalOrders * 100) : 0;
+      const totalOrders = completedOrders + pendingOrders; 
+      const avgOrderValue = completedOrders > 0 ? totalRevenue / completedOrders : 0;
+      const totalAttemptedOrders = completedOrders + pendingOrders + cancelledOrders;
+      const successRate = totalAttemptedOrders > 0 
+        ? (completedOrders / totalAttemptedOrders) * 100 
+        : 0;
 
       // Recent data
       const [recentCustomers, recentOrders] = await Promise.all([
@@ -234,41 +238,47 @@ class DataController {
     }
   }
 
+
   // Helper method to update customer statistics
   async updateCustomerStats(customerId) {
     try {
-      console.log(`Updating customer stats for: ${customerId}`);
-      
+      logger.info(`Updating stats for customerId: ${customerId}`);
+
       const customer = await Customer.findByPk(customerId);
       if (!customer) {
-        console.log(`Customer not found: ${customerId}`);
+        logger.warn(`Customer with id ${customerId} not found`);
         return;
       }
 
-      // FIX: Count ALL orders, not just completed ones for total spent and count
-      // But you can still track completion rate separately
-      const allOrders = await Order.findAll({
-        where: { 
-          customerId
-        },
-        order: [['orderDate', 'DESC']]
-      });
+      const orders = await Order.findAll({ where: { customerId } });
+      logger.info(`Found ${orders.length} orders for customerId: ${customerId}`);
 
-      const completedOrders = allOrders.filter(order => order.status === 'completed');
-      
-      // Calculate stats based on ALL orders (including pending)
-      const totalSpent = allOrders.reduce((sum, order) => sum + parseFloat(order.amount), 0);
-      const orderCount = allOrders.length;
-      const lastOrderDate = allOrders.length > 0 
-        ? new Date(Math.max(...allOrders.map(order => new Date(order.orderDate))))
+      let totalSpent = 0;
+      let orderCount = 0;
+
+      for (const order of orders) {
+        switch (order.status) {
+          case 'completed':
+            totalSpent += parseFloat(order.amount);
+            orderCount += 1;
+            break;
+
+          case 'pending':
+            orderCount += 1;
+            break;
+
+          case 'cancelled':
+            break;
+
+          default:
+            logger.debug(`Skipping order ${order.id} with status: ${order.status}`);
+            break;
+        }
+      }
+
+      const lastOrderDate = orders.length > 0 
+        ? new Date(Math.max(...orders.map(o => new Date(o.orderDate))))
         : null;
-
-      console.log(`Customer ${customerId} stats:`, {
-        totalSpent,
-        orderCount,
-        lastOrderDate,
-        completedOrders: completedOrders.length
-      });
 
       await customer.update({
         totalSpent,
@@ -276,13 +286,19 @@ class DataController {
         lastOrderDate
       });
 
-      console.log(`Customer stats updated successfully for ${customerId}`);
+      logger.info(`Customer stats updated successfully for customerId: ${customerId}`, {
+        totalSpent,
+        orderCount,
+        lastOrderDate
+      });
 
     } catch (error) {
-      logger.error('Update customer stats error:', error);
-      throw error; // Re-throw so calling code knows it failed
+      logger.error(`Error updating stats for customerId: ${customerId}`, error);
+      throw error; 
     }
   }
+
+
 }
 
 module.exports = new DataController();
