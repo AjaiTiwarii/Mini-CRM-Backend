@@ -63,11 +63,6 @@ const schemas = {
     segmentId: Joi.string().uuid().required(),
     name: Joi.string().min(2).max(100).required()
   }),
-
-  // AI prompt validation
-  aiPrompt: Joi.object({
-    prompt: Joi.string().min(5).max(500).required()
-  })
 };
 
 // Specific validation middleware for each endpoint
@@ -75,7 +70,6 @@ const validateCustomer = validate(schemas.customer);
 const validateOrder = validate(schemas.order);
 const validateSegment = validate(schemas.segment);
 const validateCampaign = validate(schemas.campaign);
-const validateAIPrompt = validate(schemas.aiPrompt);
 
 module.exports = {
   validate,
@@ -83,6 +77,5 @@ module.exports = {
   validateOrder,
   validateSegment,
   validateCampaign,
-  validateAIPrompt,
   schemas
 };
