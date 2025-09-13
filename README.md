@@ -130,6 +130,9 @@ The server will start at `http://localhost:5000`
    - Production: `https://yourdomain.com/auth/google/callback`
 6. Copy the Client ID and Client Secret to your `.env` file
 
+## Api Documentation
+Api documetation is available [here](https://documenter.getpostman.com/view/29025034/2sB3HoqKfn)
+
 
 ## Environment Variables
 
