@@ -8,6 +8,9 @@ router.get('/', authenticateSession, campaignController.getCampaigns.bind(campai
 router.post('/', authenticateSession, campaignController.createCampaign.bind(campaignController));
 router.get('/:id', authenticateSession, campaignController.getCampaign.bind(campaignController));
 
-console.log('Campaign routes registered WITH session authentication');
+// AI insights route
+router.get('/:id/insights', authenticateSession, campaignController.getCampaignInsights.bind(campaignController));
+
+console.log('Campaign routes registered WITH session authentication + AI insights');
 
 module.exports = router;
