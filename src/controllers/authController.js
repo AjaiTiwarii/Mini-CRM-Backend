@@ -1,4 +1,3 @@
-const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const { User } = require('../models');
 const ApiResponse = require('../utils/response');
@@ -8,29 +7,21 @@ class AuthController {
   // Google OAuth login - redirect to Google
   googleLogin(req, res, next) {
     passport.authenticate('google', {
-      scope: ['profile', 'email']
+      scope: ['profile', 'email'],
     })(req, res, next);
   }
 
   // Google OAuth callback
   async googleCallback(req, res, next) {
-    passport.authenticate('google', { 
-      failureRedirect: `${process.env.FRONTEND_URL}/login?error=auth_failed` 
-    }, async (err, user) => {
-      if (err || !user) {
-        logger.error('Google OAuth error:', err);
-        return res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
-      }
+    passport.authenticate(
+      'google',
+      { failureRedirect: `${process.env.FRONTEND_URL}/login?error=auth_failed` },
+      async (err, user) => {
+        if (err || !user) {
+          logger.error('Google OAuth error:', err);
+          return res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
+        }
 
-      try {
-        // Generate JWT token
-        const token = jwt.sign(
-          { userId: user.id, email: user.email },
-          process.env.JWT_SECRET,
-          { expiresIn: '7d' }
-        );
-
-        // Set session
         req.logIn(user, (err) => {
           if (err) {
             logger.error('Session login error:', err);
@@ -38,14 +29,11 @@ class AuthController {
           }
 
           logger.info(`User authenticated: ${user.email}`);
-          res.redirect(`${process.env.FRONTEND_URL}?token=${token}`);
+          // redirect frontend after login success
+          res.redirect(process.env.FRONTEND_URL);
         });
-
-      } catch (error) {
-        logger.error('JWT generation error:', error);
-        res.redirect(`${process.env.FRONTEND_URL}/login?error=token_error`);
       }
-    })(req, res, next);
+    )(req, res, next);
   }
 
   // Get current user
@@ -58,7 +46,7 @@ class AuthController {
       }
 
       const user = await User.findByPk(req.user.id, {
-        attributes: ['id', 'email', 'name', 'avatar']
+        attributes: ['id', 'email', 'name', 'avatar'],
       });
 
       if (!user) {
@@ -68,7 +56,6 @@ class AuthController {
       }
 
       res.json(ApiResponse.success({ user }, 'User data retrieved'));
-
     } catch (error) {
       logger.error('Get current user error:', error);
       res.status(500).json(
@@ -90,7 +77,6 @@ class AuthController {
 
       logger.info(`User logged out: ${req.user?.email}`);
       res.json(ApiResponse.success(null, 'Logged out successfully'));
-
     } catch (error) {
       logger.error('Logout error:', error);
       res.status(500).json(

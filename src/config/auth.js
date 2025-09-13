@@ -33,21 +33,6 @@ passport.use(new GoogleStrategy({
   }
 }));
 
-// JWT Strategy
-passport.use(new JwtStrategy({
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: process.env.JWT_SECRET
-}, async (payload, done) => {
-  try {
-    const user = await User.findByPk(payload.userId);
-    if (user) {
-      return done(null, user);
-    }
-    return done(null, false);
-  } catch (error) {
-    return done(error, false);
-  }
-}));
 
 // Serialize user for session
 passport.serializeUser((user, done) => {
