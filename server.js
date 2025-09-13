@@ -28,6 +28,9 @@ app.use(express.urlencoded({ extended: true }));
 //   },
 // }));
 
+app.set('trust proxy', 1);
+
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-session-secret',
   resave: false,
