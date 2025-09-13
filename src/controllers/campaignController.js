@@ -1,5 +1,6 @@
 const { Campaign, Segment, CommunicationLog, Customer } = require('../models');
 const ApiResponse = require('../utils/response');
+const aiService = require('../services/aiService');
 
 class CampaignController {
   // GET /api/campaigns - List user's campaigns
@@ -71,7 +72,7 @@ class CampaignController {
     }
   }
 
-  // GET /api/campaigns/:id - Get campaign details
+  // GET /api/campaigns/:id - Get campaign details with AI insights
   async getCampaign(req, res) {
     try {
       const campaign = await Campaign.findOne({
@@ -79,7 +80,7 @@ class CampaignController {
         include: [{
           model: Segment,
           as: 'segment',
-          attributes: ['name']
+          attributes: ['name', 'rules']
         }]
       });
 
@@ -87,10 +88,126 @@ class CampaignController {
         return res.status(404).json(ApiResponse.error('Campaign not found'));
       }
 
-      res.json(ApiResponse.success({ campaign }));
+      // Generate AI insights if campaign is completed
+      let aiInsights = null;
+      if (campaign.status === 'COMPLETED') {
+        try {
+          // Get delivery stats by customer segments
+          const deliveryStats = await this.getDeliveryStatsBySegment(campaign.id, campaign.segment.rules);
+          
+          const campaignData = {
+            name: campaign.name,
+            audienceSize: campaign.audienceSize,
+            sentCount: campaign.sentCount,
+            failedCount: campaign.failedCount,
+            segmentRules: campaign.segment.rules,
+            deliveryStats
+          };
+
+          aiInsights = await aiService.generateCampaignInsights(campaignData);
+          console.log(`AI insights generated for campaign: ${campaign.id}`);
+        } catch (error) {
+          console.error('Failed to generate AI insights:', error);
+        }
+      }
+
+      res.json(ApiResponse.success({ 
+        campaign,
+        aiInsights 
+      }));
     } catch (error) {
       console.error('Get campaign error:', error);
       res.status(500).json(ApiResponse.error('Failed to fetch campaign'));
+    }
+  }
+
+  // Get AI insights for a campaign
+  async getCampaignInsights(req, res) {
+    try {
+      const campaign = await Campaign.findOne({
+        where: { id: req.params.id, userId: req.user.id },
+        include: [{
+          model: Segment,
+          as: 'segment',
+          attributes: ['name', 'rules']
+        }]
+      });
+
+      if (!campaign) {
+        return res.status(404).json(ApiResponse.error('Campaign not found'));
+      }
+
+      if (campaign.status !== 'COMPLETED') {
+        return res.status(400).json(ApiResponse.error('Campaign insights only available for completed campaigns'));
+      }
+
+      // Get delivery stats by customer segments
+      const deliveryStats = await this.getDeliveryStatsBySegment(campaign.id, campaign.segment.rules);
+      
+      const campaignData = {
+        name: campaign.name,
+        audienceSize: campaign.audienceSize,
+        sentCount: campaign.sentCount,
+        failedCount: campaign.failedCount,
+        segmentRules: campaign.segment.rules,
+        deliveryStats
+      };
+
+      const aiInsights = await aiService.generateCampaignInsights(campaignData);
+
+      res.json(ApiResponse.success({ 
+        insights: aiInsights,
+        generatedAt: new Date().toISOString()
+      }));
+
+    } catch (error) {
+      console.error('Get campaign insights error:', error);
+      res.status(500).json(ApiResponse.error('Failed to generate campaign insights'));
+    }
+  }
+
+  // Helper: Get delivery statistics segmented by customer characteristics
+  async getDeliveryStatsBySegment(campaignId, segmentRules) {
+    try {
+      const logs = await CommunicationLog.findAll({
+        where: { campaignId },
+        include: [{
+          model: Customer,
+          as: 'customer',
+          attributes: ['totalSpent', 'orderCount']
+        }]
+      });
+
+      const stats = [];
+
+      // High value customers (>₹10K)
+      const highValueCustomers = logs.filter(log => log.customer.totalSpent > 10000);
+      if (highValueCustomers.length > 0) {
+        const delivered = highValueCustomers.filter(log => log.status === 'SENT').length;
+        const rate = ((delivered / highValueCustomers.length) * 100).toFixed(1);
+        stats.push({
+          description: 'Customers with >₹10K spending',
+          count: highValueCustomers.length,
+          rate: rate
+        });
+      }
+
+      // Frequent buyers (>3 orders)
+      const frequentBuyers = logs.filter(log => log.customer.orderCount > 3);
+      if (frequentBuyers.length > 0) {
+        const delivered = frequentBuyers.filter(log => log.status === 'SENT').length;
+        const rate = ((delivered / frequentBuyers.length) * 100).toFixed(1);
+        stats.push({
+          description: 'Customers with >3 orders',
+          count: frequentBuyers.length,
+          rate: rate
+        });
+      }
+
+      return stats;
+    } catch (error) {
+      console.error('Error getting delivery stats:', error);
+      return [];
     }
   }
 
@@ -185,7 +302,7 @@ class CampaignController {
     });
   }
 
-  // Helper: Build single condition (same as segment controller)
+  // Helper: Build single condition
   buildSingleCondition(rule) {
     const { Op } = require('sequelize');
     const { field, operator, value } = rule;
