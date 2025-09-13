@@ -18,15 +18,28 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Session configuration
+// app.use(session({
+//   secret: process.env.SESSION_SECRET || 'your-session-secret',
+//   resave: false,
+//   saveUninitialized: false,
+//   cookie: {
+//     secure: process.env.NODE_ENV === 'production',
+//     maxAge: 24 * 60 * 60 * 1000, // 24 hours
+//   },
+// }));
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-session-secret',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,         // required in production (HTTPS)
+    httpOnly: true,       // prevents client-side JS access
+    sameSite: "none",     // critical for cross-origin cookies
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
   },
 }));
+
 
 // Passport middleware
 app.use(passport.initialize());
